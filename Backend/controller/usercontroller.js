@@ -5,7 +5,6 @@ const User = require('../models/userModel')
 
 
 exports.userById = (req, res, next, id) => {
-
     User.findById(id).exec((err, data) => {
         if (err || !data) {
             return res.status(400).json({
@@ -14,7 +13,6 @@ exports.userById = (req, res, next, id) => {
         }
             
         req.profile = data; // we added the data info to the req
-
         next();
 
     })
@@ -22,7 +20,7 @@ exports.userById = (req, res, next, id) => {
 }
 
 exports.hasAuthorization = (req,res, next) =>{
-   
+ 
   const authoruzed = req.profile && req.auth && req.auth._id == req.profile._id;
   if (!authoruzed){
     return res.status(403).json({

@@ -5,14 +5,28 @@ var postSchema = mongoose.Schema({
     title:
     {
         type : String,
-        required : 'Title is Required',
+        required : true
     },
 
     body:
     {
         type : String,
-        required : 'Body is Required',
+        required : true 
     },
+    photo : {
+        type : Buffer,
+        contentType : String
+    },
+
+    postedBy : {
+        type : ObjectId,
+        ref : 'User'
+    },
+
+    created : {
+        type : Date ,
+        default : Date.now
+    }
 
    
 })
