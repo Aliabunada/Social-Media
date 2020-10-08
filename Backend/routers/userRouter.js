@@ -1,7 +1,7 @@
 const express = require ('express');
 const router = express.Router();
 const {signup,signin,signout,requireSignin} = require('../controller/auth')
-const {userById,allUser,getUser,updateUser,hasAuthorization,deleteUser} = require('../controller/usercontroller')
+const {userById,allUser,getUser,updateUser,hasAuthorization,deleteUser,userPhoto} = require('../controller/usercontroller')
 const validator = require('../validator/validationfunctions')
 
 router.post('/signup', validator.signupUserValidation, signup)
@@ -15,6 +15,8 @@ router.get('/signout',signout)
 router.get('/users',allUser)
 
 router.get('/user/:userId',requireSignin,getUser)
+
+router.get('/user/photo/:userId',userPhoto)
 
 router.param('userId', userById)
 

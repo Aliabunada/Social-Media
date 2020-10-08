@@ -92,9 +92,9 @@ console.log("ppppppost update")
     posts = _.extend(posts,req.body);
     
     posts.updated = Date.now();
-    posts.save(err => {
-        if(err){
-            return res.status(400).json({error:err})
+    posts.save(error => {
+        if(error){
+            return res.status(400).json({error:error})
         }   
     
         res.json(posts);

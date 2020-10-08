@@ -30,6 +30,14 @@ var userSchema = mongoose.Schema({
 
     },
 
+    photo : {
+        data : Buffer,
+        contentType : String
+    },
+about : {
+    type: String,
+    trim : true
+},
     updated : Date
     
 
@@ -42,7 +50,7 @@ userSchema.virtual('password')
      // create temproray variable called _password
     this._password = password
     
-    this.salt = uuidv1() //generate timeStamp
+    this.salt = uuidv1() //generate timeStamp, The uuidv1 is Package to give random String
     
     this.hashed_password = this.encryptPassword(password);
    
