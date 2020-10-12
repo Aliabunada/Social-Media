@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 const { v1: uuidv1 } = require('uuid');
 const crypto = require ('crypto')
+const {ObjectId} = mongoose.Schema;
 var userSchema = mongoose.Schema({
     
     name:{
@@ -21,9 +22,8 @@ var userSchema = mongoose.Schema({
         // required : true,
        
     },
-
     salt : String ,
-    
+
     created : {
         type : Date ,
         default : Date.now
@@ -38,8 +38,11 @@ about : {
     type: String,
     trim : true
 },
-    updated : Date
-    
+    updated : Date,
+
+    followers : [{type : ObjectId,  ref : 'User'}],
+
+    following : [{type : ObjectId,   ref : 'User'}],
 
 })
 

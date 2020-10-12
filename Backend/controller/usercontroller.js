@@ -3,19 +3,22 @@ const User = require('../models/userModel')
 const formidable = require('formidable');
 const fs = require('fs');
 
-
+// middleware param 
 exports.userById = (req, res, next, id) => {
-    User.findById(id).exec((err, data) => {
-        if (err || !data) {
-            return res.status(400).json({
-                error: "User Not Found !"
-            })
-        }
+    User.findById(id)
+        .populate('following', '_id name')
+        .populate('followers', '_id name')
+        .exec((err, data) => {
+            if (err || !data) {
 
-        req.profile = data; // we added the data info to the req
-        next();
+                return res.status(400).json({
+                    error: "User Not Found !"
+                })
+            }
 
-    })
+            req.profile = data; // we added the data info to the req
+            next();
+        })
 
 }
 
@@ -30,6 +33,19 @@ exports.hasAuthorization = (req, res, next) => {
     next();
 }
 
+// findPeople
+exports.findPeople = (req, res, next) => {
+    let following = req.profile.following;
+    following.push(req.profile._id)
+    User.find({ _id: { $nin: following } }, (err, users) => {
+        if (err) {
+            return res.status(400).json({ error: err })
+        }
+        return res.json(users)
+    }).select("name")
+}
+
+// CRUD for USER
 exports.allUser = (req, res) => {
 
     User.find((err, users) => {
@@ -44,16 +60,18 @@ exports.allUser = (req, res) => {
 }
 
 exports.getUser = (req, res) => {
+
     req.profile.hashed_password = undefined;
     req.profile.salt = undefined;
+    console.log(req.profile, ' data bygetuser')
     return res.json(req.profile);
 }
 
 
-exports.userPhoto = (req, res, next)=>{
-    if(req.profile.photo.data){
-        res.set("Content-Type",req.profile.photo.type)
-       return res.send(req.profile.photo.data)
+exports.userPhoto = (req, res, next) => {
+    if (req.profile.photo.data) {
+        res.set("Content-Type", req.profile.photo.type)
+        return res.send(req.profile.photo.data)
     }
     next();
 }
@@ -96,4 +114,66 @@ exports.deleteUser = (req, res, next) => {
 
         res.json(" Deleted Done !")
     })
+}
+
+
+// following and un following
+
+exports.addFollowing = (req, res, next) => {
+    User.findByIdAndUpdate(
+        req.body.userid,
+        { $push: { following: req.body.followId } },
+
+        (err, result) => {
+            if (err) {
+                return res.status(400).json(err)
+            }
+            next();
+        })
+}
+
+exports.addFollower = (req, res) => {
+    User.findByIdAndUpdate(
+        req.body.followId,
+        { $push: { followers: req.body.userid } }
+        , { new: true } // we do new becuase mongoose will return old data not updated data
+    )
+        .populate('following', '_id name')
+        .populate('followers', '_id name')
+        .exec((err, result) => {
+            if (err) {
+                return res.status(400).json(err)
+            }
+            result.hashed_password = undefined;
+            result.salt = undefined
+            return res.json(result)
+        })
+}
+
+exports.removeFollowing = (req, res, next) => {
+    User.findByIdAndUpdate(req.body.userid, { $pull: { following: req.body.unfollowId }, }, (err, result) => {
+        if (err) {
+            return res.status(400).json(err)
+        }
+        next();
+    })
+}
+
+
+exports.removeFollower = (req, res, next) => {
+    User.findByIdAndUpdate(req.body.unfollowId,
+        { $pull: { followers: req.body.userid } }
+        , { new: true } // we do new becuase mongoose will return old data not updated data
+    )
+        .populate('following', '_id name')
+        .populate('followers', '_id name')
+        .exec((err, result) => {
+            if (err) {
+                return res.status(400).json(err)
+            }
+            result.hashed_password = undefined;
+            result.salt = undefined
+            return res.json(result)
+        })
+
 }
