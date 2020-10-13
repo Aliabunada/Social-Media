@@ -22,12 +22,13 @@ var postSchema = mongoose.Schema({
         type : ObjectId,
         ref : 'User'
     },
-
+    updated : Date,
     created : {
         type : Date ,
         default : Date.now
-    }
-
+    },
+    
+    like : [{type : ObjectId,  ref : 'User'}],
    
 })
 

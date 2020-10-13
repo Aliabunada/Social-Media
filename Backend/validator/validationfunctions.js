@@ -16,10 +16,11 @@ exports.createPostValidation = (req,res,next)=>{
      //check the errors
      const errors = req.validationErrors();
 
-     if(errors){
-         const firstError = errors.map(err=>err.msg)[0];
-         return res.status(400).json({err:firstError});
-     }
+     
+    if(errors){
+        const firstError = errors.map(err=>err.msg)[0];
+        return res.status(400).json({err:firstError});
+    }
      next();
     
 }

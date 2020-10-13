@@ -1,7 +1,8 @@
 const Post = require('../models/postmodel')
 const formidable = require('formidable');
 const fs = require('fs');
-const _ = require ('lodash')
+const _ = require('lodash');
+const { findByIdAndUpdate } = require('../models/postmodel');
 
 exports.postById = (req, res, next, id) => {
     Post.findById(id)
@@ -24,15 +25,21 @@ exports.getPost = (req, res) => {
 
     Post.find()
         .populate("postedBy", "_id name email")
-        .select('_id title body')
+        .select('_id title body created like')
+        .sort({ created: -1 })
         .then(data => {
-            res.json({ data })
+            res.json(data)
         })
         .catch(err => {
             res.json({
                 error: err
             })
         })
+};
+
+
+exports.getSinglePost = (req, res) => {
+    return res.json(req.post);
 };
 
 exports.createPost = (req, res, next) => {
@@ -44,6 +51,7 @@ exports.createPost = (req, res, next) => {
                 error: "Image could not be upload"
             })
         }
+
         let post = new Post(fields);
         req.profile.hashed_password = undefined;
         req.profile.salt = undefined;
@@ -66,6 +74,7 @@ exports.createPost = (req, res, next) => {
 exports.postByUser = (req, res) => {
     Post.find({ postedBy: req.profile._id })
         .populate("postedBy", "_id name email")
+        .select('_id title body created like')
         .sort("-created")
         .exec((err, posts) => {
             if (err) {
@@ -76,43 +85,80 @@ exports.postByUser = (req, res) => {
         })
 }
 
-exports.isPoster = (req ,res, next)=>{
+exports.isPoster = (req, res, next) => {
     let isPoster = req.post && req.auth && req.post.postedBy._id == req.auth._id;
-    if(!isPoster){
-        return res.status(403).json({error : "You Are not Autharized"})
+    if (!isPoster) {
+        return res.status(403).json({ error: "You Are not Autharized" })
     }
     next();
 }
 
 
-exports.updatepost = (req,res)=>{
-console.log("ppppppost update")
-    let posts = req.post;
+exports.updatepost = (req, res) => {
+    let form = new formidable.IncomingForm();
+    form.keepExtensions = true;
+    form.parse(req, (err, fields, files) => {
+        if (err) {
+            return res.status(400).json({ error: 'Image Could not be uploaded' })
+        }
+        let post = req.post;
+        post = _.extend(post, fields)
+        post.updated = Date.now();
 
-    posts = _.extend(posts,req.body);
-    
-    posts.updated = Date.now();
-    posts.save(error => {
-        if(error){
-            return res.status(400).json({error:error})
-        }   
-    
-        res.json(posts);
+        if (files.photo) {
+            post.photo.data = fs.readFileSync(files.photo.path);
+            post.photo.contentType = files.photo.type
+        }
+        post.save((err, result) => {
+            if (err) {
+                return res.status(400).json(err)
+            }
+            return res.json(result)
 
+        })
 
-        
     })
-    next()
+
 
 }
 
-exports.deletePost = (req, res)=>{
-    post = req.post ; 
-    post.remove((err,post)=>{
+exports.deletePost = (req, res) => {
+    post = req.post;
+    post.remove((err, post) => {
         if (err) {
 
             return res.json({ error: err })
         }
-        res.json( " Deleted Done !")
+        res.json(" Deleted Done !")
+    })
+}
+
+exports.postPhoto = (req, res, next) => {
+    if (req.post.photo.data) {
+        res.set("Content-Type", req.post.photo.type)
+        return res.send(req.post.photo.data)
+    }
+    next();
+}
+
+
+exports.like = (req, res) => {
+    findByIdAndUpdate(req.body.postId, { $push: { like: req.body.userId }},{new:true})
+    .exec((error,result)=>{
+        if(error){
+            return res.status(400).json({error:error})
+        }
+        return res.json(result)
+    })
+
+}
+
+exports.unlike = (req, res) => {
+    findByIdAndUpdate(req.body.postId, { $pull: { like: req.body.userId }},{new:true})
+    .exec((error,result)=>{
+        if(error){
+            return res.status(400).json({error:error})
+        }
+        return res.json(result)
     })
 }
