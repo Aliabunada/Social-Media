@@ -95,6 +95,7 @@ export var updatePost = (postid, token, post) => {
 }
 
 export var like = (userId, token, postId) => {
+    console.log('hi from postapi')
     return fetch(`${process.env.REACT_APP_API_URL}/post/like`, {
         method: 'PUT',
         headers: {
@@ -105,9 +106,11 @@ export var like = (userId, token, postId) => {
         body: JSON.stringify({ userId, postId })
     })
         .then(response => {
+            console.log('hi from postapi response success')
             return response.json()
         })
         .catch(error => {
+            console.log('hi from postapi response error')
             console.log(error)
         })
 }
